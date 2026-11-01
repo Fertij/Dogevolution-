@@ -1,0 +1,16 @@
+{
+  "name": "Dog Evolution",
+  "short_name": "Dog Evo",
+  "description": "Собирай и объединяй собак, открывай новые породы и миры",
+  "lang": "ru",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1b1050",
+  "theme_color": "#3f8a34",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

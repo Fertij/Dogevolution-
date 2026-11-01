@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Иконки Dog Evolution</title>
+  <style>
+    body { margin: 0; padding: 16px; background: #222; color: #fff; font: 600 15px/1.4 system-ui, sans-serif; text-align: center; }
+    .item { margin: 18px 0; }
+    img { display: block; width: 160px; height: 160px; margin: 0 auto 8px; border-radius: 34px; }
+    a { color: #ffd43b; }
+  </style>
+</head>
+<body>
+  <p>Скачай каждую картинку и положи в папку <b>icons</b> с указанным именем.</p>
+  <div id="list"></div>
+  <script>
+    function draw(S) {
+      const c = document.createElement('canvas');
+      c.width = c.height = S;
+      const g = c.getContext('2d');
+      g.scale(S / 512, S / 512);
+
+      // Фон с лучами
+      const bg = g.createRadialGradient(256, 220, 20, 256, 256, 380);
+      bg.addColorStop(0, '#a2e46a');
+      bg.addColorStop(0.55, '#3f9b3a');
+      bg.addColorStop(1, '#1f5e24');
+      g.fillStyle = bg;
+      g.fillRect(0, 0, 512, 512);
+      g.save();
+      g.translate(256, 240);
+      for (let i = 0; i < 16; i++) {
+        g.rotate(Math.PI / 8);
+        g.fillStyle = 'rgba(255,250,200,0.12)';
+        g.beginPath(); g.moveTo(0, 0); g.lineTo(400, -45); g.lineTo(400, 45); g.closePath(); g.fill();
+      }
+      g.restore();
+
+      // Монета
+      g.fillStyle = 'rgba(0,0,0,0.3)';
+      g.beginPath(); g.ellipse(256, 420, 150, 26, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#8a4b00';
+      g.beginPath(); g.arc(256, 262, 175, 0, Math.PI * 2); g.fill();
+      const face = g.createRadialGradient(200, 170, 20, 256, 245, 190);
+      face.addColorStop(0, '#fff8c4');
+      face.addColorStop(0.4, '#ffd84a');
+      face.addColorStop(0.8, '#f5a800');
+      face.addColorStop(1, '#d98300');
+      g.fillStyle = face;
+      g.beginPath(); g.arc(256, 245, 175, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = '#e08f00';
+      g.lineWidth = 12;
+      g.setLineDash([8, 12]);
+      g.beginPath(); g.arc(256, 245, 158, 0, Math.PI * 2); g.stroke();
+      g.setLineDash([]);
+      const inner = g.createLinearGradient(0, 110, 0, 380);
+      inner.addColorStop(0, '#eea200');
+      inner.addColorStop(1, '#ffe17a');
+      g.fillStyle = inner;
+      g.beginPath(); g.arc(256, 245, 136, 0, Math.PI * 2); g.fill();
+
+      // Лапка
+      const paw = col => {
+        g.fillStyle = col;
+        g.beginPath(); g.ellipse(256, 285, 62, 50, 0, 0, Math.PI * 2); g.fill();
+        for (const [x, y, r] of [[176, 220, -0.45], [222, 180, -0.15], [290, 180, 0.15], [336, 220, 0.45]]) {
+          g.beginPath(); g.ellipse(x, y, 22, 29, r, 0, Math.PI * 2); g.fill();
+        }
+      };
+      g.save(); g.translate(0, 8); paw('#fff4b8'); g.restore();
+      paw('#b86a00');
+
+      // Блики
+      g.strokeStyle = 'rgba(255,255,255,0.85)';
+      g.lineWidth = 16;
+      g.lineCap = 'round';
+      g.beginPath(); g.arc(256, 245, 150, Math.PI * 1.08, Math.PI * 1.42); g.stroke();
+      g.fillStyle = '#ffffff';
+      g.beginPath();
+      const sx = 382, sy = 120, z = 30;
+      g.moveTo(sx, sy - z); g.quadraticCurveTo(sx, sy, sx + z, sy);
+      g.quadraticCurveTo(sx, sy, sx, sy + z); g.quadraticCurveTo(sx, sy, sx - z, sy);
+      g.quadraticCurveTo(sx, sy, sx, sy - z); g.fill();
+      return c.toDataURL('image/png');
+    }
+
+    const list = document.getElementById('list');
+    for (const S of [180, 192, 512]) {
+      const url = draw(S), name = `icon-${S}.png`;
+      const d = document.createElement('div');
+      d.className = 'item';
+      d.innerHTML = `<img src="${url}" alt="${name}"><a href="${url}" download="${name}">Скачать ${name}</a>`;
+      list.appendChild(d);
+    }
+  </script>
+</body>
+</html>

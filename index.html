@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Dog Evolution</title>
+
+  <!-- Приложение на экране «Домой» (iPhone и Android) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#3f8a34">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Dog Evo">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Отступы под «чёлку» и полоску «Домой» на iPhone. На других телефонах отступы равны нулю -->
+  <style>
+    html, body { overscroll-behavior: none; -webkit-touch-callout: none; }
+    html body #ui, html body #homeBtn, html body #gearBtn { top: calc(18px + env(safe-area-inset-top)); }
+    html body #worldBtn, html body #upgBtn, html body #achPop { top: calc(74px + env(safe-area-inset-top)); }
+    html body #starBtn { top: calc(130px + env(safe-area-inset-top)); }
+    html body #toast { top: calc(92px + env(safe-area-inset-top)); }
+    html body #shop { bottom: calc(14px + env(safe-area-inset-bottom)); }
+    html body .menu-content {
+      padding-top: calc(34px + env(safe-area-inset-top));
+      padding-bottom: calc(22px + env(safe-area-inset-bottom));
+    }
+    html body #upgrades { padding-top: calc(40px + env(safe-area-inset-top)); }
+    html body .sg-back, html body .sg-coins { top: calc(18px + env(safe-area-inset-top)); }
+    html body .sg-plate { top: calc(74px + env(safe-area-inset-top)); }
+    html body .sg-up { bottom: calc(16px + env(safe-area-inset-bottom)); }
+    html body .sg-hint { bottom: calc(104px + env(safe-area-inset-bottom)); }
+  </style>
+
+  <script>
+    // Показывает ошибки JavaScript прямо на экране
+    window.addEventListener('error', function (e) {
+      var box = document.getElementById('errorBox');
+      if (!box) return;
+      var file = (e.filename || '').split('/').pop();
+      box.textContent = 'Ошибка: ' + e.message + (file ? ' (' + file + ', строка ' + e.lineno + ')' : '');
+      box.style.display = 'block';
+    });
+
+    // Работа без интернета: подключаем sw.js.
+    // Браузеры разрешают это только на https-сайте или на localhost
+    if ('serviceWorker' in navigator &&
+        (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      });
+    }
+  </script>
+</head>
+<body>
+  <svg class="defs" width="0" height="0" aria-hidden="true">
+    <defs>
+      <radialGradient id="coinFace" cx="35%" cy="30%" r="75%">
+        <stop offset="0" stop-color="#fff8c4"/>
+        <stop offset=".35" stop-color="#ffd84a"/>
+        <stop offset=".75" stop-color="#f5a800"/>
+        <stop offset="1" stop-color="#d98300"/>
+      </radialGradient>
+      <linearGradient id="coinInner" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#eea200"/>
+        <stop offset="1" stop-color="#ffe17a"/>
+      </linearGradient>
+      <linearGradient id="coinEdge" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#c77800"/>
+        <stop offset="1" stop-color="#7a4100"/>
+      </linearGradient>
+      <linearGradient id="pawG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#a85f00"/>
+        <stop offset="1" stop-color="#d98a00"/>
+      </linearGradient>
+
+      <g id="paw">
+        <path d="M32 31c-5 0-10 5.5-10 9.5 0 3 2.5 4.5 5 4.5 2 0 3.3-1 5-1s3 1 5 1c2.5 0 5-1.5 5-4.5 0-4-5-9.5-10-9.5z"/>
+        <ellipse cx="24" cy="30" rx="3.2" ry="4" transform="rotate(-25 24 30)"/>
+        <ellipse cx="29.2" cy="24.5" rx="3.3" ry="4.2" transform="rotate(-8 29.2 24.5)"/>
+        <ellipse cx="34.8" cy="24.5" rx="3.3" ry="4.2" transform="rotate(8 34.8 24.5)"/>
+        <ellipse cx="40" cy="30" rx="3.2" ry="4" transform="rotate(25 40 30)"/>
+      </g>
+
+      <symbol id="coin" viewBox="0 0 64 64">
+        <circle cx="32" cy="34.5" r="29" fill="url(#coinEdge)"/>
+        <circle cx="32" cy="31" r="29" fill="url(#coinFace)"/>
+        <circle cx="32" cy="31" r="26.3" fill="none" stroke="#e08f00" stroke-width="2.4" stroke-dasharray="1.6 2.2"/>
+        <circle cx="32" cy="31" r="22.5" fill="url(#coinInner)" stroke="#bf7200" stroke-width="1.6"/>
+        <use href="#paw" transform="translate(0 1.3)" fill="#fff4b8"/>
+        <use href="#paw" fill="url(#pawG)"/>
+        <path d="M11 24 A22 22 0 0 1 27 9.5" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none" opacity=".8"/>
+        <ellipse cx="19" cy="16" rx="5" ry="2.4" fill="#fff" opacity=".55" transform="rotate(-40 19 16)"/>
+        <path d="M47 8 L48.3 12.7 L53 14 L48.3 15.3 L47 20 L45.7 15.3 L41 14 L45.7 12.7Z" fill="#fff"/>
+      </symbol>
+
+      <symbol id="gear" viewBox="0 0 24 24">
+        <g fill="none" stroke-width="2.4" stroke-linecap="round">
+          <circle cx="12" cy="12" r="3"/>
+          <circle cx="12" cy="12" r="6.5"/>
+          <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>
+        </g>
+      </symbol>
+
+      <symbol id="trophy" viewBox="0 0 24 24">
+        <path d="M7 3.5h10v5a5 5 0 0 1-10 0z"/>
+        <path d="M7 5.5H4.2a3.2 3.2 0 0 0 3.3 4.4M17 5.5h2.8a3.2 3.2 0 0 1-3.3 4.4" fill="none" stroke-width="2" stroke-linecap="round"/>
+        <path d="M10.8 13.2h2.4v3.8h-2.4z"/>
+        <rect x="7.5" y="17" width="9" height="3.5" rx="1"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div id="ui">
+    <div class="coins" id="coinsBox">
+      <span class="coin-icon" id="coinIcon"><svg viewBox="0 0 64 64"><use href="#coin"/></svg></span>
+      <span class="coins-value" id="coins">0</span>
+    </div>
+  </div>
+
+  <button id="homeBtn" aria-label="Меню">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff6cf" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 11.5 12 4l9 7.5"/>
+      <path d="M5.5 10v9.5h5v-5h3v5h5V10"/>
+    </svg>
+  </button>
+
+  <button id="gearBtn" aria-label="Настройки">
+    <svg viewBox="0 0 24 24" stroke="#fff6cf"><use href="#gear"/></svg>
+  </button>
+
+  <button id="worldBtn" aria-label="Миры">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff6cf" stroke-width="2.2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/>
+    </svg>
+  </button>
+
+  <div id="toast"></div>
+
+  <canvas id="game"></canvas>
+
+  <div id="shop">
+    <button id="buyBtn" aria-label="Купить щенка">
+      <span class="buy-shine"></span>
+      <span class="buy-icon">
+        <svg viewBox="0 0 48 48">
+          <defs>
+            <radialGradient id="pupHead" cx="38%" cy="32%" r="70%">
+              <stop offset="0" stop-color="#f6dcb4"/>
+              <stop offset=".5" stop-color="#d9a066"/>
+              <stop offset="1" stop-color="#a8692e"/>
+            </radialGradient>
+          </defs>
+          <circle cx="24" cy="25" r="15" fill="url(#pupHead)" stroke="#6e3e1b" stroke-opacity=".5" stroke-width="1.5"/>
+          <ellipse cx="18" cy="16" rx="5" ry="3.5" fill="#8a5422" opacity=".9"/>
+          <ellipse cx="10.5" cy="24" rx="5.5" ry="10.5" fill="#8a5422" stroke="#5e3416" stroke-opacity=".5" transform="rotate(18 10.5 24)"/>
+          <ellipse cx="37.5" cy="24" rx="5.5" ry="10.5" fill="#8a5422" stroke="#5e3416" stroke-opacity=".5" transform="rotate(-18 37.5 24)"/>
+          <ellipse cx="24" cy="32" rx="9" ry="6.5" fill="#f6dcb4"/>
+          <ellipse cx="18.5" cy="24" rx="2.6" ry="3" fill="#2b1d14"/>
+          <circle cx="19.4" cy="22.8" r="1" fill="#fff"/>
+          <ellipse cx="29.5" cy="24" rx="2.6" ry="3" fill="#2b1d14"/>
+          <circle cx="30.4" cy="22.8" r="1" fill="#fff"/>
+          <ellipse cx="15.5" cy="30" rx="2.6" ry="1.6" fill="#ff8a8a" opacity=".55"/>
+          <ellipse cx="32.5" cy="30" rx="2.6" ry="1.6" fill="#ff8a8a" opacity=".55"/>
+          <path d="M22 34.3q2 4.8 4 0z" fill="#ff6b81"/>
+          <path d="M24 31v2.3 M20.5 33.3q3.5 2.6 7 0" stroke="#5a3418" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+          <ellipse cx="24" cy="29" rx="3.4" ry="2.5" fill="#2b1d14"/>
+          <ellipse cx="23" cy="28.2" rx="1.1" ry=".7" fill="#fff" opacity=".85"/>
+        </svg>
+      </span>
+      <span class="buy-text">
+        <span class="buy-title">Щенок</span>
+        <span class="buy-price">
+          <span class="buy-progress"></span>
+          <svg class="coin-svg" viewBox="0 0 64 64"><use href="#coin"/></svg>
+          <span id="price">10</span>
+        </span>
+      </span>
+    </button>
+  </div>
+
+  <!-- ===== Главное меню ===== -->
+  <div id="menu">
+    <canvas id="menuBg"></canvas>
+    <div class="menu-rays"></div>
+    <span class="deco d1"><svg viewBox="19 19 26 27"><use href="#paw"/></svg></span>
+    <span class="deco d2"><svg viewBox="19 19 26 27"><use href="#paw"/></svg></span>
+    <span class="deco d3"><svg viewBox="19 19 26 27"><use href="#paw"/></svg></span>
+    <span class="deco d4"><svg viewBox="19 19 26 27"><use href="#paw"/></svg></span>
+    <span class="deco d5"><svg viewBox="19 19 26 27"><use href="#paw"/></svg></span>
+    <span class="deco d6"><svg viewBox="19 19 26 27"><use href="#paw"/></svg></span>
+
+    <div class="menu-content">
+      <div class="sign">
+        <div class="sign-badge"><svg viewBox="19 19 26 27"><use href="#paw" fill="#7a4300"/></svg></div>
+        <h1 class="title">
+          <span class="t-dog" data-text="Dog">Dog</span>
+          <span class="t-evo" data-text="Evolution">Evolution</span>
+        </h1>
+        <span class="star s1"></span>
+        <span class="star s2"></span>
+        <span class="star s3"></span>
+      </div>
+      <div class="ribbon" id="ribbon">Собери все породы!</div>
+
+      <div class="stage">
+        <canvas id="menuDog"></canvas>
+        <div class="best">
+          <span class="best-label">Лучшая порода</span>
+          <span id="bestName">Дворняжка</span>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="chip"><svg viewBox="0 0 64 64"><use href="#coin"/></svg><span id="menuCoins">0</span></div>
+        <div class="chip"><svg viewBox="19 19 26 27"><use href="#paw" fill="#ffd43b"/></svg><span id="menuBreeds">1/20</span></div>
+      </div>
+
+      <div class="menu-buttons">
+        <div class="menu-row">
+          <button id="settingsBtn" class="mbtn restart" aria-label="Настройки">
+            <svg viewBox="0 0 24 24" stroke="#fff6cf"><use href="#gear"/></svg>
+          </button>
+          <button id="playBtn" class="mbtn play">
+            <svg viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z" fill="#fff"/></svg>
+            <span>Играть</span>
+          </button>
+          <button id="restartBtn" class="mbtn restart" aria-label="Начать заново">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff6cf" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+              <path d="M21 3v5h-5"/>
+            </svg>
+          </button>
+        </div>
+        <div class="menu-row">
+          <button id="breedsBtn" class="mbtn alt">
+            <svg viewBox="19 19 26 27"><use href="#paw" fill="#fff"/></svg>
+            <span>Породы</span>
+          </button>
+          <button id="achBtn" class="mbtn ach">
+            <svg viewBox="0 0 24 24" fill="#fff" stroke="#fff"><use href="#trophy"/></svg>
+            <span>Достижения</span>
+            <span class="ach-badge" id="achBadge">0</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Коллекция пород ===== -->
+  <div id="collection">
+    <div class="panel">
+      <button id="closeCollection" class="close" aria-label="Закрыть">✕</button>
+      <div class="panel-title">Породы</div>
+      <div id="collectionGrid" class="grid"></div>
+      <div class="panel-hint">Объединяй одинаковых собак, чтобы открыть новые породы</div>
+    </div>
+  </div>
+
+  <!-- ===== Достижения ===== -->
+  <div id="achievements">
+    <div class="panel">
+      <div class="panel-badge trophy"><svg viewBox="0 0 24 24" fill="#7a4300" stroke="#7a4300"><use href="#trophy"/></svg></div>
+      <button id="closeAch" class="close" aria-label="Закрыть">✕</button>
+      <div class="panel-title">Достижения</div>
+      <div class="ach-total">
+        <div class="ach-total-bar"><i id="achTotalFill"></i></div>
+        <span id="achTotalText">0 / 0</span>
+      </div>
+      <div id="achList" class="ach-list"></div>
+    </div>
+  </div>
+
+  <!-- ===== Подтверждение новой игры ===== -->
+  <div id="confirm">
+    <div class="panel">
+      <div class="confirm-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+          <path d="M21 3v5h-5"/>
+        </svg>
+      </div>
+      <div class="panel-title">Начать заново?</div>
+      <div class="confirm-text">Все собаки, монеты, породы, достижения и прокачка пропадут. Отменить это будет нельзя.</div>
+      <div class="confirm-buttons">
+        <button id="cancelRestart" class="mbtn gray">Отмена</button>
+        <button id="okRestart" class="mbtn danger">Заново</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Настройки ===== -->
+  <div id="settings">
+    <div class="panel">
+      <div class="panel-badge"><svg viewBox="0 0 24 24" stroke="#7a4300"><use href="#gear"/></svg></div>
+      <div class="panel-title">Настройки</div>
+
+      <div class="set-list">
+        <div class="set-row">
+          <span class="set-ico ico-sound">
+            <svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="#fff"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          </span>
+          <span class="set-text"><b>Звуки</b><small>монеты, лай, слияние</small></span>
+          <button class="switch" data-key="sound" aria-label="Звуки"><span class="knob"></span></button>
+        </div>
+
+        <div class="set-row vol-row">
+          <span class="set-ico ico-vol">
+            <svg viewBox="0 0 24 24"><path d="M5 18v-3M9.5 18v-6M14 18v-9M18.5 18V6" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>
+          </span>
+          <span class="set-text"><b>Громкость</b><small id="volumeVal">70%</small></span>
+          <input type="range" id="volume" min="0" max="100" step="5" aria-label="Громкость">
+        </div>
+
+        <div class="set-row">
+          <span class="set-ico ico-vibro">
+            <svg viewBox="0 0 24 24"><rect x="8" y="4" width="8" height="16" rx="2" fill="#fff"/><path d="M4.5 8.5v7M19.5 8.5v7M2 10.5v3M22 10.5v3" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          </span>
+          <span class="set-text"><b>Вибрация</b><small>слияние и покупки</small></span>
+          <button class="switch" data-key="vibro" aria-label="Вибрация"><span class="knob"></span></button>
+        </div>
+
+        <div class="set-row">
+          <span class="set-ico ico-fx">
+            <svg viewBox="0 0 24 24"><path d="M10 3l1.8 5.2L17 10l-5.2 1.8L10 17l-1.8-5.2L3 10l5.2-1.8z" fill="#fff"/><path d="M18 14l.9 2.1 2.1.9-2.1.9L18 20l-.9-2.1-2.1-.9 2.1-.9z" fill="#fff"/></svg>
+          </span>
+          <span class="set-text"><b>Эффекты</b><small>бабочки, снег, чайки</small></span>
+          <button class="switch" data-key="effects" aria-label="Эффекты"><span class="knob"></span></button>
+        </div>
+      </div>
+
+      <button id="okSettings" class="mbtn play set-done"><span>Готово</span></button>
+      <div class="panel-foot">Dog Evolution · версия 1.4</div>
+    </div>
+  </div>
+
+  <!-- ===== Выбор мира ===== -->
+  <div id="worlds">
+    <div class="panel">
+      <div class="panel-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#7a4300" stroke-width="2.2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/>
+        </svg>
+      </div>
+      <button id="closeWorlds" class="close" aria-label="Закрыть">✕</button>
+      <div class="panel-title">Миры</div>
+      <div id="worldList" class="world-list"></div>
+    </div>
+  </div>
+
+  <!-- ===== Новый мир открыт ===== -->
+  <div id="unlock">
+    <div class="unlock-rays"></div>
+    <div class="unlock-box">
+      <div class="unlock-kicker">Новый мир открыт!</div>
+      <div class="unlock-name" id="unlockName">Снежная долина</div>
+      <canvas id="unlockDog"></canvas>
+      <div class="unlock-text" id="unlockText"></div>
+      <div class="confirm-buttons">
+        <button id="laterWorld" class="mbtn gray">Позже</button>
+        <button id="goWorld" class="mbtn play">Вперёд!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Новая порода ===== -->
+  <div id="reveal">
+    <div class="rv-rays"></div>
+    <div class="rv-flash"></div>
+    <div class="rv-box">
+      <div class="rv-kicker">Новая порода!</div>
+      <canvas id="revealDog"></canvas>
+      <div class="rv-info">
+        <span class="rv-lvl" id="revealLvl">Уровень 1</span>
+        <span class="rv-name" id="revealName">Дворняжка</span>
+        <span class="rv-world" id="revealWorld"></span>
+        <span class="rv-income"><svg viewBox="0 0 64 64"><use href="#coin"/></svg><span id="revealCoin">+1</span><small>за монету</small></span>
+      </div>
+      <button id="revealOk" class="mbtn play"><span>Ура!</span></button>
+    </div>
+  </div>
+
+  <!-- ===== Плашка достижения ===== -->
+  <div id="achPop">
+    <div class="ap-clip"><span class="ap-shine"></span></div>
+    <div class="ap-medal">
+      <div class="ap-rays"></div>
+      <div class="ap-coin">🏆</div>
+    </div>
+    <div class="ap-body">
+      <div class="ap-kicker">Достижение получено!</div>
+      <div class="ap-name">Название</div>
+      <div class="ap-desc">Описание</div>
+    </div>
+    <div class="ap-reward"><svg viewBox="0 0 64 64"><use href="#coin"/></svg><span>+0</span></div>
+  </div>
+
+  <div id="errorBox" onclick="this.style.display='none'"
+       style="display:none;position:fixed;left:8px;right:8px;bottom:8px;z-index:999;padding:10px 12px;border-radius:12px;background:#c92a2a;color:#fff;font:600 13px/1.3 system-ui,sans-serif;white-space:pre-wrap;"></div>
+
+  <!-- Порядок важен -->
+  <script src="js/utils.js"></script>
+  <script src="js/field.js"></script>
+  <script src="js/field-winter.js"></script>
+  <script src="js/dog.js"></script>
+  <script src="js/dogs-winter.js"></script>
+  <script src="js/worlds.js"></script>
+  <script src="js/world3.js"></script>
+  <script src="js/dogs-beach.js"></script>
+  <script src="js/dogs-beach2.js"></script>
+  <script src="js/shop.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/test.js"></script>
+  <script src="js/reveal.js"></script>
+  <script src="js/achievements.js"></script>
+  <script src="js/cutscene.js"></script>
+  <script src="js/cutscene-beach.js"></script>
+  <script src="js/upgrades.js"></script>
+  <script src="js/sanctuary.js"></script>
+  <script src="js/cutscene-star.js"></script>
+</body>
+</html>
